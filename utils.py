@@ -1,6 +1,22 @@
 import os
 import json
+import shutil
 import pandas as pd
+
+def continue_train_on(path):
+    try:
+        os.makedirs(path)
+    except FileExistsError:
+        usr_in = input(f'{path} already exists. Overwrite? (y/n): ')
+        if usr_in.lower() == 'y':
+            shutil.rmtree(path)
+            os.makedirs(path)
+        else:
+            usr_in = input('Continue training this model? (y/n): ')
+            if usr_in.lower() == 'y': return True
+            else:
+                print('Exiting...')
+                raise SystemExit
 
 class Params:
     """Class to load/save hyperparameters from/to a json file.
