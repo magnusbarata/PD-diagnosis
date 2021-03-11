@@ -31,6 +31,18 @@ class BaseGen(keras.utils.Sequence):
         if len(X.shape) < 4: X = np.expand_dims(X, -1)
         return X
 
+    def __iter__(self):
+        self.idx = 0
+        return self
+
+    def __next__(self):
+        if self.idx < len(self):
+            result = self[self.idx]
+            self.idx += 1
+            return result
+        else:
+            raise StopIteration
+
     def get_img_arr(self, fname):
         return imageio.imread(fname).astype('float64')
 
