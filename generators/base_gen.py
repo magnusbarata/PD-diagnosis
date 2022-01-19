@@ -1,5 +1,6 @@
 from tensorflow import keras
 import pydicom as dcm
+import nibabel as nib
 import numpy as np
 import imageio
 
@@ -28,7 +29,6 @@ class BaseGen(keras.utils.Sequence):
             X[i] = self.get_dcm_arr(fname) if fmt == 'dcm' else self.get_img_arr(fname)
         
         X = np.array(X)
-        if len(X.shape) < 4: X = np.expand_dims(X, -1)
         return X
 
     def __iter__(self):
@@ -43,10 +43,19 @@ class BaseGen(keras.utils.Sequence):
         else:
             raise StopIteration
 
-    def get_img_arr(self, fname):
-        return imageio.imread(fname).astype('float64')
+    @staticmethod
+    def get_img_arr(fname):
+        img = imageio.imread(fname).astype('float64')
+        return np.expand_dims(img, -1) if len(img.shape) < 3 else img
 
-    def get_dcm_arr(self, fname):
+    @staticmethod
+    def get_dcm_arr(fname):
         ds = dcm.dcmread(fname)
         img = ds.pixel_array * ds.RescaleSlope + ds.RescaleIntercept
+        if len(img.shape) < 3:
+            img = np.expand_dims(img, -1)
         return img.astype('float64')
+
+    @staticmethod
+    def get_nii_arr(fname):
+        return nib.load(fname).get_fdata()
