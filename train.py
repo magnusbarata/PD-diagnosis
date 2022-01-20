@@ -38,7 +38,10 @@ def main(args):
     if continue_train_on(args.exp_dir):
         pass # TODO
     else:
-        model = find_model(params.model)(input_shape=gen_tr.x_shape[1:], classes=gen_tr.n_class)
+        model_params = {'classes': gen_tr.n_class}
+        if hasattr(params, 'model_params'):
+            model_params.update(params.model_params)
+        model = find_model(params.model)(input_shape=gen_tr.x_shape[1:], **model_params)
         optimizer = keras.optimizers.Adam(lr=params.lr, decay=params.decay)
         model.compile(loss='categorical_crossentropy', optimizer=optimizer, metrics=['accuracy'])
 
@@ -54,6 +57,7 @@ def main(args):
               workers=4,
               callbacks=[chkpoint_best, chkpoint_latest, logger, tensorboard, stopper]
     )
+    params.gpu_name = get_gpu_name()
     params.save(f'{args.exp_dir}/train_params.json')
 
 if __name__ == '__main__':

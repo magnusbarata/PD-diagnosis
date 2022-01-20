@@ -2,6 +2,7 @@ import os
 import re
 import json
 import shutil
+import subprocess
 import pandas as pd
 
 def set_seed(seed):
@@ -31,6 +32,12 @@ def limit_gpu_memory(mem_limit, gpu_idx=0):
         except RuntimeError as e:
             # Virtual devices must be set before GPUs have been initialized
             print(e)
+
+
+def get_gpu_name():
+    return subprocess.check_output(
+        'nvidia-smi --query-gpu=name --format=csv,noheader', shell=True
+    ).decode('utf-8')  
 
 
 def continue_train_on(path):
