@@ -1,3 +1,4 @@
+import math
 import tensorflow as tf
 from tensorflow.keras import layers
 
@@ -17,13 +18,21 @@ class Patches(layers.Layer):
 
     def call(self, inputs):
         batch_size = tf.shape(inputs)[0]
-        patches = tf.image.extract_patches(
-            images=inputs,
-            sizes=[1, self.patch_size, self.patch_size, 1],
-            strides=[1, self.patch_size, self.patch_size, 1],
-            rates=[1, 1, 1, 1],
-            padding='VALID'
-        )
+        if len(inputs.shape) >= 5:
+            patches = tf.extract_volume_patches(
+                inputs,
+                ksizes=[1, self.patch_size, self.patch_size, self.patch_size, 1],
+                strides=[1, self.patch_size, self.patch_size, self.patch_size, 1],
+                padding='VALID'
+            )
+        else:
+            patches = tf.image.extract_patches(
+                images=inputs,
+                sizes=[1, self.patch_size, self.patch_size, 1],
+                strides=[1, self.patch_size, self.patch_size, 1],
+                rates=[1, 1, 1, 1],
+                padding='VALID'
+            )
         patch_dims = patches.shape[-1] # flattened patch dim (patch_size * patch_size * depth)
         patches = tf.reshape(patches, [batch_size, -1, patch_dims])
         return patches
@@ -74,7 +83,7 @@ def vit(input_shape,
     
     inp = layers.Input(input_shape)
     x = augmentation_layer(inp) if augmentation_layer else inp
-    num_patches = (x.shape[1] // patch_size) ** 2
+    num_patches = math.prod(dim // patch_size for dim in x.shape[1:-1])
     x = Patches(patch_size)(x)
     x = PatchEncoder(num_patches, projection_dim)(x)    
     for _ in range(transformer_layers):
