@@ -1,0 +1,11 @@
+{
+    "name": "[THESIS] Baseline experiment with 3D reg dataset.",
+    "data": "dataset/NIIreg.csv",
+    "batch_size": 2,
+    "volume_size": [256, 256, 128],
+    "model": "baseline",
+    "seed": 7,
+    "lr": 1e-3,
+    "decay": 1e-4,
+    "n_epochs": 1000
+}
