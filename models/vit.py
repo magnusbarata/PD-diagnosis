@@ -1,4 +1,4 @@
-import math
+import numpy as np
 import tensorflow as tf
 from tensorflow.keras import layers
 
@@ -83,7 +83,7 @@ def vit(input_shape,
     
     inp = layers.Input(input_shape)
     x = augmentation_layer(inp) if augmentation_layer else inp
-    num_patches = math.prod(dim // patch_size for dim in x.shape[1:-1])
+    num_patches = np.prod([dim // patch_size for dim in x.shape[1:-1]])
     x = Patches(patch_size)(x)
     x = PatchEncoder(num_patches, projection_dim)(x)    
     for _ in range(transformer_layers):
@@ -99,6 +99,6 @@ def vit(input_shape,
     x = layers.LayerNormalization(epsilon=1e-6)(x)
     x = layers.Flatten()(x)
     x = layers.Dropout(0.5)(x)
-    x = mlp(x, hidden_units=mlp_head_units, dropout_rate=0.5)
+    x = mlp(x, hidden_units=mlp_head_units, dropout_rate=0.1)
     out = layers.Dense(classes, activation='softmax')(x)
     return tf.keras.Model(inp, out, name='ViT')
