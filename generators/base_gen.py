@@ -57,5 +57,13 @@ class BaseGen(keras.utils.Sequence):
         return img.astype('float64')
 
     @staticmethod
-    def get_nii_arr(fname):
-        return nib.load(fname).get_fdata()
+    def get_nii_arr(fname, targ_ornt=None):
+        img = nib.load(fname)
+        img_data = img.get_fdata()
+        if targ_ornt is not None:
+            transform = nib.orientations.ornt_transform(
+                nib.io_orientation(img.affine),
+                nib.orientations.axcodes2ornt(targ_ornt)
+            )
+            img_data = nib.apply_orientation(img_data, transform)
+        return img_data

@@ -9,12 +9,14 @@ class VolGen(BaseGen):
                  labels=None,
                  batch_size=32,
                  volume_size=(256, 256, 128),
+                 align_ornt=None,
                  dtype='float32',
                  shuffle=True):
         super(VolGen, self).__init__(samples, batch_size=batch_size, shuffle=shuffle)
         self.labels = labels
         self.n_class = 0 if labels is None else len(np.unique(labels))
         self.volume_size = volume_size
+        self.align_ornt = align_ornt
         self.dtype = dtype
         self._set_shape()
 
@@ -34,7 +36,7 @@ class VolGen(BaseGen):
         for i, index in enumerate(b_indices):
             fname = self.samples[index]
             fmt = fname.split('.', maxsplit=1)[-1].lower()
-            vol = self.get_dcm_arr(fname) if fmt == 'dcm' else self.get_nii_arr(fname)
+            vol = self.get_dcm_arr(fname) if fmt == 'dcm' else self.get_nii_arr(fname, self.align_ornt)
             vol = np.expand_dims(vol, -1)
             X[i] = resize(vol, self.volume_size, order=1, mode='constant', anti_aliasing=True)
         X = np.array(X)

@@ -22,18 +22,20 @@ def main(args):
     X, y = df.Fpath.values, df.Label.values
     X_tr, X_ts, y_tr, y_ts = train_test_split(X, y, stratify=y, train_size=0.85, random_state=params.seed)
     X_tr, X_val, y_tr, y_val = train_test_split(X_tr, y_tr, stratify=y_tr, train_size=0.89, random_state=params.seed)
+    datagen_params = params.datagen_params if hasattr(params, 'datagen_params') else {}
     if hasattr(params, 'volume_size'):
-        gen_tr = VolGen(X_tr, y_tr, batch_size=params.batch_size, volume_size=params.volume_size)
-        gen_val = VolGen(X_val, y_val, batch_size=params.batch_size, volume_size=params.volume_size)
+        gen_tr = VolGen(X_tr, y_tr, batch_size=params.batch_size, volume_size=params.volume_size, **datagen_params)
+        gen_val = VolGen(X_val, y_val, batch_size=params.batch_size, volume_size=params.volume_size, **datagen_params)
     else:
         gen_tr = AugGen(
             X_tr, y_tr,
             batch_size=params.batch_size,
             image_size=params.image_size,
             aug_fns=[random_noise, random_rotation, random_shift, random_zoom],
-            gan_generators=[keras.models.load_model(fname) for fname in params.gan_generators]
+            gan_generators=[keras.models.load_model(fname) for fname in params.gan_generators],
+            **datagen_params
         )
-        gen_val = AugGen(X_val, y_val, batch_size=params.batch_size, image_size=params.image_size)
+        gen_val = AugGen(X_val, y_val, batch_size=params.batch_size, image_size=params.image_size, **datagen_params)
     
     if continue_train_on(args.exp_dir):
         pass # TODO
