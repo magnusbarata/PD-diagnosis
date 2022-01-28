@@ -1,15 +1,9 @@
 {
-    "name": "[THESIS] ViT experiment with 3D ori dataset.",
+    "name": "[THESIS] PDNet experiment with 3D ori dataset.",
     "data": "dataset/NIIori.csv",
     "batch_size": 2,
     "volume_size": [256, 256, 128],
-    "model": "vit",
-    "model_params": {
-        "projection_dim": 32,
-        "num_heads": 12,
-        "transformer_layers": 12,
-        "mlp_head_units": [64, 16]
-    },
+    "model": "pdnet",
     "seed": 7,
     "lr": 1e-3,
     "decay": 1e-4,
