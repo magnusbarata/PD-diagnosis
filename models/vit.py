@@ -68,6 +68,20 @@ class PatchEncoder(layers.Layer):
         return cfg
 
 
+def transformer_block(x, n_layers=4, num_heads=4, projection_dim=16):
+    mlp_units = [projection_dim * 2, projection_dim]
+    for _ in range(n_layers):
+        x1 = layers.LayerNormalization(epsilon=1e-6)(x)
+        x1 = layers.MultiHeadAttention(
+            num_heads=num_heads, key_dim=projection_dim, dropout=.1
+        )(x1, x1)
+        x = layers.Add()([x, x1])
+        x1 = layers.LayerNormalization(epsilon=1e-6)(x)
+        x1 = mlp(x1, hidden_units=mlp_units, dropout_rate=.1)
+        x = layers.Add()([x, x1])
+    return x
+
+
 def vit(input_shape,
         patch_size=16,
         projection_dim=128,
@@ -79,22 +93,13 @@ def vit(input_shape,
         **kwargs):
     """Vision Transformer model from https://arxiv.org/pdf/2010.11929.pdf"""
     assert input_shape[0] == input_shape[1], 'Input image must be square'
-    transformer_units = [projection_dim * 2, projection_dim]
     
     inp = layers.Input(input_shape)
     x = augmentation_layer(inp) if augmentation_layer else inp
     num_patches = np.prod([dim // patch_size for dim in x.shape[1:-1]])
     x = Patches(patch_size)(x)
-    x = PatchEncoder(num_patches, projection_dim)(x)    
-    for _ in range(transformer_layers):
-        x1 = layers.LayerNormalization(epsilon=1e-6)(x)
-        x1 = layers.MultiHeadAttention(
-            num_heads=num_heads, key_dim=projection_dim, dropout=0.1
-        )(x1, x1)
-        x = layers.Add()([x, x1])
-        x1 = layers.LayerNormalization(epsilon=1e-6)(x)
-        x1 = mlp(x1, hidden_units=transformer_units, dropout_rate=0.1)
-        x = layers.Add()([x, x1])
+    x = PatchEncoder(num_patches, projection_dim)(x) 
+    x = transformer_block(x, transformer_layers, num_heads, projection_dim)
 
     x = layers.LayerNormalization(epsilon=1e-6)(x)
     x = layers.Flatten()(x)
